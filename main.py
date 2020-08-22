@@ -1,8 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from string import ascii_uppercase
 import os
-import csv
+from openpyxl import Workbook
 
 
 
@@ -11,11 +12,20 @@ def save_txt(path,content):
         for cont in content:
             file.write(cont)
 
-def save_csv(file_name,columns,content):
-    with open(file_name,'w',newline='',encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(columns)
-        writer.writerows(content)
+def save_table(file_name,columns,content):
+    workbook = Workbook()
+    sheet = workbook.active
+
+    for i,case in enumerate(ascii_uppercase):
+        if len(columns) == i:
+            break
+        sheet.cell(row=1,column=i+1).value = columns[i]
+        sheet.cell(row=2,column=i+1).value = content[0][i]
+
+
+        
+
+    workbook.save(filename=file_name)
 
 
 def files_exist(files):
@@ -34,7 +44,8 @@ def files_exist(files):
 
     return True
     
-
+PATH_TO_CHROMEDRIVER = 'C:\\chromedriver.exe'
+PATH_TO_YOUR_CHROME_ACCOUNT = r'C:\Users\Ануар\AppData\Local\Google\Chrome\User Data\Profile 1'
 
 chrome_data_dir = PATH_TO_YOUR_CHROME_ACCOUNT
 URL = 'https://studwork.org/orders'
@@ -66,7 +77,7 @@ cats = ['Название','Раздел','Срок сдачи','Цена','Пр
 orders = driver.find_elements_by_class_name('order-item')
 
 
-for page in range(1,3):
+for page in range(1,2):
     driver.get(URL+'?page={}'.format(page))
     base_window = driver.current_window_handle#current page with orders
     orders = driver.find_elements_by_class_name('order-item')
@@ -108,18 +119,16 @@ for page in range(1,3):
                 pass
 
         
-
         
         if not os.path.exists('orders\\{}\\'.format(order_number.text)):
             os.mkdir('orders\\{}\\'.format(order_number.text))
 
-        file_name = 'orders\\{order_number}\\{order_number}.csv'.format(order_number=order_number.text)
-        save_csv(file_name,cats,parsed_orders)
+        file_name = 'orders\\{order_number}\\{order_number}.xlsx'.format(order_number=order_number.text)
+        save_table(file_name,cats,parsed_orders)
         save_txt('orders\\{order_number}\\links.txt'.format(order_number=order_number.text),file_names)
 
         driver.close()#close current window
         driver.switch_to_window(base_window)#switch to main window(orders page)
-        print(parsed_orders)
         parsed_orders.clear()
 
 
